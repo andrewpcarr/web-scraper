@@ -1,77 +1,56 @@
-/* Scraping into DB (18.2.5)
- * ========================== */
-
 // Dependencies
-var express = require("express");
-var mongojs = require("mongojs");
-// Require request and cheerio. This makes the scraping possible
-var request = require("request");
-var cheerio = require("cheerio");
+const express = require("express");
+const mongojs = require("mongojs");
 
+const request = require("request");
+const cheerio = require("cheerio");
 
-// Initialize Express
-var app = express();
+const app = express();
 
-// Database configuration
-var databaseUrl = "scraper";
-var collections = ["scrapedData"];
+const databaseUrl = "scraper";
+let collections = ["scrapedData"];
 
-// Hook mongojs configuration to the db variable
-var db = mongojs(databaseUrl, collections);
+// Connecting mongojs config to db variable
+const db = mongojs(databaseUrl, collections);
 db.on("error", function(error) {
   console.log("Database Error:", error);
 });
 
-
-// Main route (simple Hello World Message)
+// Main route
 app.get("/", function(req, res) {
-  res.send("Hello world");
+  res.send("NPR -- 13.7 Cosmos and Culture. Visit /scrape to run a fresh scrape, then head over to /all to see the results.");
 });
 
-// Retrieve data from the db
+// Display scraped data
 app.get("/all", function(req, res) {
-  // Find all results from the scrapedData collection in the db
   db.scrapedData.find({}, function(error, found) {
-    // Throw any errors to the console
     if (error) {
       console.log(error);
     }
-    // If there are no errors, send the data to the browser as a json
     else {
       res.json(found);
     }
   });
 });
 
-// Scrape data from one site and place it into the mongodb db
+// Scrape data
 app.get("/scrape", function(req, res) {
-  // Make a request for the news section of ycombinator
   request("http://www.npr.org/sections/13.7/", function(error, response, html) {
-    // Load the html body from request into cheerio
-    var $ = cheerio.load(html);
-    // For each element with a "title" class
+    const $ = cheerio.load(html);
     $('div.item-info').each(function(i, element) {
-      // Save the text of each link enclosed in the current element
-      var title = $(this).children('h2.title').children('a').text();
-      // Save the href value of each link enclosed in the current element
-      var link = $(this).children('h2.title').children('a').attr('href');
+      let title = $(this).children('h2.title').children('a').text();
+      let link = $(this).children('h2.title').children('a').attr('href');
 
-      // If this title element had both a title and a link
       if (title && link) {
-        // Save the data in the scrapedData db
         db.scrapedData.save({
           title: title,
           link: link
         },
         function(error, saved) {
-          // If there's an error during this query
           if (error) {
-            // Log the error
             console.log(error);
           }
-          // Otherwise,
           else {
-            // Log the saved data
             console.log(saved);
           }
         });
@@ -79,10 +58,8 @@ app.get("/scrape", function(req, res) {
     });
   });
 
-  // This will send a "Scrape Complete" message to the browser
   res.send("Scrape Complete");
 });
-
 
 // Listen on port 3000
 app.listen(3000, function() {
