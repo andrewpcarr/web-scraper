@@ -18,8 +18,12 @@ db.on("error", function(error) {
 
 // Main route
 app.get("/", function(req, res) {
-  res.send("NPR -- 13.7 Cosmos and Culture. Visit /scrape to run a fresh scrape, then head over to /all to see the results.");
+  res.send("NPR -- 13.7 Cosmos and Culture. Visit <a href='localhost:3000/scrape'>/scrape</a> to run a fresh scrape, then head over to <a href='localhost:3000/all'>/all</a> to see the results.");
 });
+
+// jQuery('a').on('click', function() {
+//   window.location.replace($(this).attr('href'));
+// });
 
 // Display scraped data
 app.get("/all", function(req, res) {
